@@ -13,8 +13,15 @@ export default function LoginForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  // Validasi password minimal 8 karakter
+  const isPasswordValid = password.length >= 8;
+
   const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!isPasswordValid) {
+      return;
+    }
 
     // Navigasi demo, belum memvalidasi akun.
     router.push("/dashboard");
@@ -50,8 +57,6 @@ export default function LoginForm() {
             <h1>Selamat datang!</h1>
             <p>Masuk untuk mengelola inventori Anda.</p>
           </div>
-
-         
 
           <form onSubmit={handleLogin}>
             <div className="form-group">
@@ -112,27 +117,62 @@ export default function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
                   required
+                  minLength={8}
+                  aria-describedby="password-hint password-error"
+                  aria-invalid={password.length > 0 && !isPasswordValid}
                 />
 
                 <button
                   type="button"
                   className="password-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                  aria-label={
+                    showPassword
+                      ? "Sembunyikan password"
+                      : "Tampilkan password"
+                  }
                 >
                   {showPassword ? (
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="19"
+                      height="19"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
                       <path d="M3 3l18 18M10.6 10.6a2 2 0 0 0 2.8 2.8" />
                       <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c5.5 0 9 7 9 7a15 15 0 0 1-3.1 3.8M6.2 6.2C4.1 7.6 3 12 3 12s3.5 7 9 7c1 0 2-.2 2.8-.5" />
                     </svg>
                   ) : (
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="19"
+                      height="19"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                    >
                       <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
                       <circle cx="12" cy="12" r="3" />
                     </svg>
                   )}
                 </button>
               </div>
+
+              <p id="password-hint" className="password-hint">
+                Password minimal 8 karakter.
+              </p>
+
+              {password.length > 0 && !isPasswordValid && (
+                <p
+                  id="password-error"
+                  className="password-error"
+                  role="alert"
+                >
+                  Password masih kurang dari 8 karakter.
+                </p>
+              )}
             </div>
 
             <div className="forgot-wrapper">
@@ -145,7 +185,11 @@ export default function LoginForm() {
               </button>
             </div>
 
-            <button type="submit" className="login-button">
+            <button
+              type="submit"
+              className="login-button"
+              disabled={!isPasswordValid}
+            >
               Login
             </button>
           </form>
