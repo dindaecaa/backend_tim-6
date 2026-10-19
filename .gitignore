@@ -3,4 +3,7 @@ node_modules/
 .env.*
 !.env.example
 npm-debug.log*
-.DS_Storegit add .
+.DS_Store
+
+frontend/node_modules/
+frontend/.next/
