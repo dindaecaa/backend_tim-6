@@ -7,3 +7,21 @@ npm-debug.log*
 
 frontend/node_modules/
 frontend/.next/
+
+# Flutter / Dart
+pbl_mobile/.dart_tool/
+pbl_mobile/.flutter-plugins
+pbl_mobile/.flutter-plugins-dependencies
+pbl_mobile/.packages
+pbl_mobile/build/
+pbl_mobile/.pub-cache/
+pbl_mobile/coverage/
+pbl_mobile/android/.gradle/
+pbl_mobile/android/local.properties
+pbl_mobile/android/key.properties
+pbl_mobile/ios/Flutter/Generated.xcconfig
+pbl_mobile/ios/Flutter/flutter_export_environment.sh
+
+pbl_mobile/analyze.txt
+
+pbl_mobile/analyze.txt
