@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -54,7 +53,6 @@ export default function SkuDatabasePage() {
 
   const itemsPerPage = 5;
 
-  // Mengambil data SKU dari backend
   async function fetchSKU() {
     try {
       setIsLoading(true);
@@ -67,9 +65,7 @@ export default function SkuDatabasePage() {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "Gagal mengambil data SKU."
-        );
+        throw new Error(result.message || "Gagal mengambil data SKU.");
       }
 
       const products: SKUData[] = (
@@ -78,8 +74,7 @@ export default function SkuDatabasePage() {
         id: item.id,
         sku: item.sku || `SKU-${item.id}`,
         nama: item.name,
-        kategori:
-          item.category_name || item.category || "Lainnya",
+        kategori: item.category_name || item.category || "Lainnya",
         stok: Number(item.stock),
         lokasi: item.location || "-",
       }));
@@ -118,16 +113,13 @@ export default function SkuDatabasePage() {
         item.kategori.toLowerCase().includes(keyword);
 
       const cocokKategori =
-        kategori === "Semua Kategori" ||
-        item.kategori === kategori;
+        kategori === "Semua Kategori" || item.kategori === kategori;
 
       const cocokLokasi =
-        lokasi === "Semua Lokasi" ||
-        item.lokasi === lokasi;
+        lokasi === "Semua Lokasi" || item.lokasi === lokasi;
 
       const cocokStatus =
-        status === "Semua Status" ||
-        getStatus(item.stok) === status;
+        status === "Semua Status" || getStatus(item.stok) === status;
 
       return (
         cocokSearch &&
@@ -145,6 +137,7 @@ export default function SkuDatabasePage() {
 
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * itemsPerPage;
+
   const currentData = filteredData.slice(
     startIndex,
     startIndex + itemsPerPage
@@ -153,9 +146,7 @@ export default function SkuDatabasePage() {
   const totalSKU = data.length;
   const skuAktif = data.filter((item) => item.stok > 0).length;
   const stokHabis = data.filter((item) => item.stok === 0).length;
-  const totalKategori = new Set(
-    data.map((item) => item.kategori)
-  ).size;
+  const totalKategori = new Set(data.map((item) => item.kategori)).size;
 
   const kategoriList = [
     ...new Set(data.map((item) => item.kategori)),
@@ -165,7 +156,6 @@ export default function SkuDatabasePage() {
     ...new Set(data.map((item) => item.lokasi)),
   ];
 
-  // Memperbarui data setelah modal edit menyimpan perubahan
   const handleSave = (updatedItem: SKUData) => {
     setData((previous) =>
       previous.map((item) =>
@@ -176,30 +166,20 @@ export default function SkuDatabasePage() {
     setEditData(null);
   };
 
-  // Menghapus data langsung melalui backend
   const handleDelete = async (id: number) => {
-    if (
-      !window.confirm(
-        "Apakah kamu yakin ingin menghapus SKU ini?"
-      )
-    ) {
+    if (!window.confirm("Apakah kamu yakin ingin menghapus SKU ini?")) {
       return;
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/products/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/products/${id}`, {
+        method: "DELETE",
+      });
 
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "Gagal menghapus SKU."
-        );
+        throw new Error(result.message || "Gagal menghapus SKU.");
       }
 
       await fetchSKU();
@@ -262,7 +242,6 @@ export default function SkuDatabasePage() {
                 <h3>{totalSKU}</h3>
                 <span>Seluruh produk</span>
               </div>
-
               <div className="sku-summary-icon">
                 <Layers3 size={21} />
               </div>
@@ -274,7 +253,6 @@ export default function SkuDatabasePage() {
                 <h3>{skuAktif}</h3>
                 <span>Masih memiliki stok</span>
               </div>
-
               <div className="sku-summary-icon">
                 <CheckCircle2 size={21} />
               </div>
@@ -286,7 +264,6 @@ export default function SkuDatabasePage() {
                 <h3>{stokHabis}</h3>
                 <span>Perlu segera diisi</span>
               </div>
-
               <div className="sku-summary-icon sku-summary-danger">
                 <AlertCircle size={21} />
               </div>
@@ -298,7 +275,6 @@ export default function SkuDatabasePage() {
                 <h3>{totalKategori}</h3>
                 <span>Kategori barang</span>
               </div>
-
               <div className="sku-summary-icon">
                 <Layers3 size={21} />
               </div>
@@ -309,7 +285,6 @@ export default function SkuDatabasePage() {
             <div className="sku-toolbar">
               <div className="sku-search">
                 <Search size={16} />
-
                 <input
                   value={search}
                   onChange={(e) => {
@@ -329,7 +304,6 @@ export default function SkuDatabasePage() {
                   }}
                 >
                   <option>Semua Kategori</option>
-
                   {kategoriList.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -345,7 +319,6 @@ export default function SkuDatabasePage() {
                   }}
                 >
                   <option>Semua Lokasi</option>
-
                   {lokasiList.map((item) => (
                     <option key={item} value={item}>
                       {item}
@@ -412,13 +385,10 @@ export default function SkuDatabasePage() {
                         <tr key={item.id}>
                           <td>{startIndex + index + 1}</td>
                           <td className="sku-code">{item.sku}</td>
-                          <td className="sku-product-name">
-                            {item.nama}
-                          </td>
+                          <td className="sku-product-name">{item.nama}</td>
                           <td>{item.kategori}</td>
                           <td>{item.stok}</td>
                           <td>{item.lokasi}</td>
-
                           <td>
                             <span
                               className={`sku-status sku-status-${itemStatus.toLowerCase()}`}
@@ -426,7 +396,6 @@ export default function SkuDatabasePage() {
                               {itemStatus}
                             </span>
                           </td>
-
                           <td>
                             <div className="sku-row-actions">
                               <button
@@ -463,8 +432,7 @@ export default function SkuDatabasePage() {
 
             <div className="sku-pagination">
               <p>
-                Menampilkan{" "}
-                <strong>{currentData.length}</strong> dari{" "}
+                Menampilkan <strong>{currentData.length}</strong> dari{" "}
                 <strong>{filteredData.length}</strong> SKU
               </p>
 
@@ -474,9 +442,7 @@ export default function SkuDatabasePage() {
                   aria-label="Halaman sebelumnya"
                   disabled={safePage === 1}
                   onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.max(page - 1, 1)
-                    )
+                    setCurrentPage((page) => Math.max(page - 1, 1))
                   }
                 >
                   <ChevronLeft size={17} />

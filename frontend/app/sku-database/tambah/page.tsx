@@ -1,7 +1,10 @@
-
 "use client";
 
-import { useState } from "react";
+import {
+  useActionState,
+  useOptimistic,
+  useState,
+} from "react";
 import Link from "next/link";
 import {
   Laptop,
@@ -9,12 +12,16 @@ import {
   Armchair,
   Warehouse,
   Boxes,
+  CheckCircle2,
+  PackagePlus,
 } from "lucide-react";
 
 import Sidebar from "../../components/Sidebar";
 import ProfilManager from "../../components/ProfilManager";
-
-const API_URL = "http://localhost:3001/api";
+import {
+  tambahSKUFormAction,
+  type SKUActionState,
+} from "./actions/skuActions";
 
 const kategoriBarang = [
   { nama: "Elektronik", Icon: Laptop },
@@ -24,87 +31,73 @@ const kategoriBarang = [
   { nama: "Lainnya", Icon: Boxes },
 ];
 
+type SKUPreview = {
+  id: number;
+  sku: string;
+  name: string;
+  category: string;
+  stock: number;
+  location: string;
+  optimistic?: boolean;
+};
+
+const initialState: SKUActionState = {
+  success: false,
+  message: "",
+};
+
 export default function TambahSKUPage() {
-  const [nama, setNama] = useState("");
+  const [state, formAction, isPending] = useActionState(
+    tambahSKUFormAction,
+    initialState
+  );
+
   const [kategori, setKategori] = useState("");
-  const [stok, setStok] = useState("");
-  const [lokasi, setLokasi] = useState("");
-  const [deskripsi, setDeskripsi] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
-
-    if (isSaving) return;
-
-    if (
-      !nama.trim() ||
-      !kategori ||
-      stok === "" ||
-      !lokasi.trim()
-    ) {
-      alert("Mohon lengkapi semua data wajib.");
-      return;
-    }
-
-    if (
-      !Number.isInteger(Number(stok)) ||
-      Number(stok) < 0
-    ) {
-      alert("Jumlah stok harus berupa bilangan bulat minimal 0.");
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      const response = await fetch(`${API_URL}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: nama.trim(),
-          category: kategori,
-          stock: Number(stok),
-          location: lokasi.trim(),
-          description: deskripsi.trim(),
-          unit: "pcs",
-          price: 0,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(
-          result.message || "Gagal menyimpan SKU."
-        );
+  const savedSKU: SKUPreview | null = state.savedSKU
+    ? {
+        id: state.savedSKU.id,
+        sku: state.savedSKU.sku,
+        name: state.savedSKU.name,
+        category: state.savedSKU.category,
+        stock: state.savedSKU.stock,
+        location: state.savedSKU.location,
+        optimistic: false,
       }
+    : null;
 
-      alert("SKU berhasil disimpan ke database!");
+  const [optimisticSKU, setOptimisticSKU] =
+    useOptimistic<SKUPreview | null>(savedSKU);
 
-      window.location.href = "/sku-database";
-    } catch (error) {
-      console.error("Gagal menyimpan SKU:", error);
+  const errors = state.errors ?? {};
 
-      if (error instanceof TypeError) {
-        alert(
-          "Tidak dapat terhubung ke backend. Pastikan server berjalan di port 3001."
-        );
-      } else {
-        alert(
-          error instanceof Error
-            ? error.message
-            : "Terjadi kesalahan saat menyimpan SKU."
-        );
-      }
-    } finally {
-      setIsSaving(false);
-    }
+  function handleSubmit(formData: FormData) {
+    const nama = String(formData.get("nama") ?? "").trim();
+    const kategoriForm = String(
+      formData.get("kategori") ?? ""
+    );
+    const rawStok = String(formData.get("stok") ?? "");
+    const lokasi = String(
+      formData.get("lokasi") ?? ""
+    ).trim();
+
+    const preview: SKUPreview = {
+      id: -Date.now(),
+      sku: "SKU-...",
+      name: nama,
+      category: kategoriForm,
+      stock: Number(rawStok),
+      location: lokasi,
+      optimistic: true,
+    };
+
+    setOptimisticSKU(preview);
+    formAction(formData);
   }
+
+  const displayedSKU = isPending
+    ? optimisticSKU
+    : savedSKU;
 
   return (
     <div className="sku-page">
@@ -131,7 +124,7 @@ export default function TambahSKUPage() {
           <div className="sku-form-layout">
             <form
               className="sku-form-card"
-              onSubmit={handleSubmit}
+              action={handleSubmit}
             >
               <div className="sku-form-group">
                 <label htmlFor="sku-nama">
@@ -140,11 +133,21 @@ export default function TambahSKUPage() {
 
                 <input
                   id="sku-nama"
-                  value={nama}
-                  onChange={(e) => setNama(e.target.value)}
+                  name="nama"
                   placeholder="Masukkan nama barang"
+                  maxLength={100}
                   required
                 />
+
+                {errors.name?.map((error, i) => (
+                  <p
+                    key={i}
+                    role="alert"
+                    className="text-red-600 text-sm"
+                  >
+                    {error}
+                  </p>
+                ))}
               </div>
 
               <div className="sku-form-group">
@@ -154,8 +157,11 @@ export default function TambahSKUPage() {
 
                 <select
                   id="sku-kategori"
+                  name="kategori"
                   value={kategori}
-                  onChange={(e) => setKategori(e.target.value)}
+                  onChange={(e) =>
+                    setKategori(e.target.value)
+                  }
                   required
                 >
                   <option value="">Pilih kategori</option>
@@ -169,6 +175,16 @@ export default function TambahSKUPage() {
                     </option>
                   ))}
                 </select>
+
+                {errors.category?.map((error, i) => (
+                  <p
+                    key={i}
+                    role="alert"
+                    className="text-red-600 text-sm"
+                  >
+                    {error}
+                  </p>
+                ))}
               </div>
 
               <div className="sku-form-group">
@@ -178,14 +194,23 @@ export default function TambahSKUPage() {
 
                 <input
                   id="sku-stok"
+                  name="stok"
                   type="number"
                   min="0"
                   step="1"
-                  value={stok}
-                  onChange={(e) => setStok(e.target.value)}
                   placeholder="Masukkan jumlah stok"
                   required
                 />
+
+                {errors.stock?.map((error, i) => (
+                  <p
+                    key={i}
+                    role="alert"
+                    className="text-red-600 text-sm"
+                  >
+                    {error}
+                  </p>
+                ))}
               </div>
 
               <div className="sku-form-group">
@@ -195,11 +220,21 @@ export default function TambahSKUPage() {
 
                 <input
                   id="sku-lokasi"
-                  value={lokasi}
-                  onChange={(e) => setLokasi(e.target.value)}
+                  name="lokasi"
                   placeholder="Contoh: A1"
+                  maxLength={100}
                   required
                 />
+
+                {errors.location?.map((error, i) => (
+                  <p
+                    key={i}
+                    role="alert"
+                    className="text-red-600 text-sm"
+                  >
+                    {error}
+                  </p>
+                ))}
               </div>
 
               <div className="sku-form-group">
@@ -209,14 +244,87 @@ export default function TambahSKUPage() {
 
                 <textarea
                   id="sku-deskripsi"
+                  name="deskripsi"
                   rows={3}
-                  value={deskripsi}
-                  onChange={(e) =>
-                    setDeskripsi(e.target.value)
-                  }
+                  maxLength={500}
                   placeholder="Tambahkan deskripsi barang..."
                 />
+
+                {errors.description?.map((error, i) => (
+                  <p
+                    key={i}
+                    role="alert"
+                    className="text-red-600 text-sm"
+                  >
+                    {error}
+                  </p>
+                ))}
               </div>
+
+              {state.message && (
+                <p
+                  role="status"
+                  className={
+                    state.success
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }
+                >
+                  {state.message}
+                </p>
+              )}
+
+              {displayedSKU && (
+                <div
+                  className="sku-optimistic-preview"
+                  aria-live="polite"
+                >
+                  <div className="flex items-center gap-2">
+                    {state.success ? (
+                      <CheckCircle2
+                        size={20}
+                        className="text-green-600"
+                      />
+                    ) : (
+                      <PackagePlus
+                        size={20}
+                        className="text-blue-600"
+                      />
+                    )}
+
+                    <strong>
+                      {isPending
+                        ? "SKU sedang ditambahkan..."
+                        : "SKU berhasil disimpan"}
+                    </strong>
+                  </div>
+
+                  <p>
+                    <strong>Nama:</strong>{" "}
+                    {displayedSKU.name}
+                  </p>
+
+                  <p>
+                    <strong>Kategori:</strong>{" "}
+                    {displayedSKU.category}
+                  </p>
+
+                  <p>
+                    <strong>Stok:</strong>{" "}
+                    {displayedSKU.stock}
+                  </p>
+
+                  <p>
+                    <strong>Lokasi:</strong>{" "}
+                    {displayedSKU.location}
+                  </p>
+
+                  <p>
+                    <strong>Kode SKU:</strong>{" "}
+                    {displayedSKU.sku}
+                  </p>
+                </div>
+              )}
 
               <div className="sku-form-actions">
                 <Link
@@ -229,9 +337,11 @@ export default function TambahSKUPage() {
                 <button
                   type="submit"
                   className="sku-save-button"
-                  disabled={isSaving}
+                  disabled={isPending}
                 >
-                  {isSaving ? "Menyimpan..." : "Simpan"}
+                  {isPending
+                    ? "Menyimpan..."
+                    : "Simpan"}
                 </button>
               </div>
             </form>
@@ -239,26 +349,22 @@ export default function TambahSKUPage() {
             <aside className="sku-category-card">
               <h3>Kategori Barang</h3>
 
-              {kategoriBarang.map(
-                ({ nama: namaKategori, Icon }) => (
-                  <button
-                    type="button"
-                    key={namaKategori}
-                    onClick={() => setKategori(namaKategori)}
-                    className={`sku-category-item ${
-                      kategori === namaKategori
-                        ? "selected"
-                        : ""
-                    }`}
-                  >
-                    <span className="sku-category-icon">
-                      <Icon size={17} />
-                    </span>
+              {kategoriBarang.map(({ nama, Icon }) => (
+                <button
+                  type="button"
+                  key={nama}
+                  onClick={() => setKategori(nama)}
+                  className={`sku-category-item ${
+                    kategori === nama ? "selected" : ""
+                  }`}
+                >
+                  <span className="sku-category-icon">
+                    <Icon size={17} />
+                  </span>
 
-                    <span>{namaKategori}</span>
-                  </button>
-                )
-              )}
+                  <span>{nama}</span>
+                </button>
+              ))}
             </aside>
           </div>
         </section>
