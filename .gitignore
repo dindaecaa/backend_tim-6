@@ -16,9 +16,14 @@ frontend/out/
 npm-debug.log*
 *.log
 
-# OS files
+# System files
 .DS_Store
-Thumbs.db
 
-# TypeScript
-*.tsbuildinfo
+# Flutter / Dart
+pbl_mobile/.dart_tool/
+pbl_mobile/.flutter-plugins
+pbl_mobile/.flutter-plugins-dependencies
+pbl_mobile/.packages
+pbl_mobile/build/
+pbl_mobile/.pub-cache/
+pbl_mobile/coverage/

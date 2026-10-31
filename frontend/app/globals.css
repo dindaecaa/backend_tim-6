@@ -13090,3 +13090,17 @@ button.supplier-stat-card.is-selected::after {
   content: none !important;
   display: none !important;
 }
+
+.password-hint {
+  font-size: 12px;
+  color: #718578;
+  margin-top: 8px;
+  margin-bottom: 0;
+}
+
+.password-error {
+  font-size: 12px;
+  color: #dc2626;
+  margin-top: 5px;
+  margin-bottom: 0;
+}
